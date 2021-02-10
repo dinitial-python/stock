@@ -84,10 +84,10 @@ def get_max_result(str, days):
     line = get_line_context(str, cnt)
     lastVal = line.split()[4]
 
-    # 获取成交量，用于计算成交额。对于美股，成交额需要大于 1 亿元美金
+    # 获取成交量，用于计算成交额。对于美股，成交额需要大于 1 亿元 RMB
     lastMount = line.split()[5]
     lastMoney = float(lastVal) * float(lastMount)
-    if lastMoney < 100000000:
+    if lastMoney < 120000000:
         return 0
 
     total = 0
@@ -118,10 +118,6 @@ def get_max_result(str, days):
 #
 def get_stock_price_list(stock, file):
 
-    print("daniel.dong - 1")
-    print(stock)
-    print(file)
-
     # show all the row and col
     pd.set_option('display.max_columns',None)
     pd.set_option('display.max_rows',None)
@@ -131,8 +127,6 @@ def get_stock_price_list(stock, file):
     stock_hk_daily_hfq_df = ak.stock_hk_daily(symbol=stock, adjust="hfq")
     print(stock_hk_daily_hfq_df, file=price_obj)
     price_obj.close()
-
-    print("daniel.dong - 2")
 
 #
 # 该函数获取在香港上市的股票列表
@@ -173,8 +167,6 @@ while True:
 
     # 获取股票代码
     item1 = line.split()[0]
-    print(line)
-   # print(item1)
 
     # Linux platform
     # price_list = 'test/' + item1 + '.txt'
