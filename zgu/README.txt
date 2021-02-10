@@ -1,4 +1,4 @@
-股票列表来自于富途证券电脑版客户端，下面的个股不能解析。
+股票列表来自于富途证券电脑版客户端，下面的个股不能解析。通过 FUTU 获取中概股的好处是包含了台湾的股票。
 1.stock list about zhonggaigu.txt file come from futu desktop version, and the follow stock can't get by the code. And removed from the file  zhonggaigu.txt
 
 AMCF	星源燃料	0.21
