@@ -30,11 +30,7 @@ def get_line_context(file_path, line_number):
 def get_average_result(str, days):
     # get line number
     cnt = len(open(str, 'r').readlines())
-    #print ("lines numbers: ", cnt)
-
-    # get the line from index value
-    #print("cnt is: ", cnt)
-    #print("days is: ", days)
+    
     good_lines = cnt - 2    
     if good_lines <= days:
         return 0    
@@ -46,9 +42,8 @@ def get_average_result(str, days):
 
     while index <= cnt:
         line = get_line_context(str, index)
-        item4 = line.split()[4]
-        #print(item4)
-        total += float(item4)        
+        item4 = line.split()[4]        
+        total += float(item4)
         index += 1
 
     average = total / days
@@ -69,32 +64,34 @@ def get_average_result(str, days):
 #   if current price biggest, return 1, or will return 0
 #
 # sample:
-#   ret = get_average_result("09923.txt", 5)
+#   ret = get_max_result("API.txt", 5)
 #
 def get_max_result(str, days):
     # get line number
     cnt = len(open(str, 'r').readlines())
-    #print ("lines numbers: ", cnt)
 
-    # get the line from index value
-    #print("cnt is: ", cnt)
-    #print("days is: ", days)
     good_lines = cnt - 2    
     if good_lines <= days:
-        return 0    
+        return 0
 
-    index = cnt - days + 1
-    #print("from index: ", index)
+    index = cnt - days + 1        
 
+    # get the last day close price
     line = get_line_context(str, cnt)
     lastVal = line.split()[4]
+
+    # 获取成交量，用于计算成交额。对于美股，成交额需要大于 1 亿元美金
+    lastMount = line.split()[5]
+    lastMoney = float(lastVal) * float(lastMount)
+    if lastMoney < 100000000:
+        return 0
 
     total = 0
 
     while index <= cnt:
         line = get_line_context(str, index)
         item4 = line.split()[4]
-        #print(item4)
+
         if float(item4) < float(lastVal):
             total += 1
 
@@ -113,19 +110,23 @@ def get_max_result(str, days):
 #   @file: the price list write to this file
 # 
 # sample:
-#   get_stock_price_list("09923", "new_09923.txt")
+#   get_stock_price_list("API", "API.txt")
 #
 def get_stock_price_list(stock, file):
     # show all the row and col
     pd.set_option('display.max_columns',None)
     pd.set_option('display.max_rows',None)
 
+    print(stock)
+    print(file)
+
     # open file and store the stock's price list into the file
     price_obj = open(file, mode = 'w',encoding='utf-8')
-    #stock_hk_daily_hfq_df = ak.stock_hk_daily(symbol="09923", adjust="hfq")
     stock_us_daily_hfq_df = ak.stock_us_daily(symbol=stock, adjust="")
     print(stock_us_daily_hfq_df, file=price_obj)
     price_obj.close()
+
+    print("finish")
 
 #
 # 该函数获取中概股的股票列表
@@ -143,9 +144,9 @@ def get_zhonggai_stock_list(file):
 
     # open file and store the stock list into the file
     stock_obj = open(file, mode = 'w',encoding='utf-8')
-    # hk_stock_list = ak.stock_us_zh_spot()
-    hk_stock_list = ak.get_us_stock_name()
-    print(hk_stock_list, file=stock_obj)
+    zg_stock_list = ak.stock_us_zh_spot()
+    #hk_stock_list = ak.get_us_stock_name()
+    print(zg_stock_list, file=stock_obj)
     stock_obj.close()
 
 
@@ -157,7 +158,7 @@ file = open('zhonggaigu.txt','r', encoding='UTF-8')
 # create excel file
 wb = xlwt.Workbook()
 # create worksheet
-ws = wb.add_sheet('zhonggaigu_')
+ws = wb.add_sheet('zhonggaigu')
 raw = 0
 
 while True:
@@ -167,17 +168,16 @@ while True:
 
     # 获取股票代码
     item1 = line.split()[0]
-    price_list = 'test/' + item1 + '.txt'
-    #price_list = item1 + '.txt'
-    # print("price list file name is: ", price_list)
 
-    # 获取指定股票的价格列表，并将其写入到指定文件中
+    # Linux platform
+    # price_list = 'test/' + item1 + '.txt'
 
+    # Windows platform
+    price_list = 'test\\' + item1 + '.txt'       
     #print(price_list)
 
-    get_stock_price_list(item1, price_list)
-
-    #print("finish")
+    # 获取指定股票的价格列表，并将其写入到指定文件中
+    get_stock_price_list(item1, price_list)   
 
     # 同时满足如下的均线
     ret20 = get_average_result(price_list, 20)
@@ -198,75 +198,16 @@ while True:
         ws.write(raw, 0, s_item0)
         ws.write(raw, 1, s_item1)
         ws.write(raw, 2, s_item2)
+
+        # 将内容写入 excel 文件中
+        wb.save('./agu_20210210.xls')
+
         raw += 1
 
         print(item1)
 
 print("write finished")
-wb.save('./stock_20210122.xls')
+#wb.save('./stock_20210122.xls')
 
-
-#
-# get_zhonggai_stock_list("zhonggaigu.txt")
-
-
-
-'''
-# Step.1 use get_hongkong_stock_list("hongkong.txt") get the stock list and remove the price information
-# Step.2 as the follow
-
-file = open('hongkong.txt','r', encoding='UTF-8')
-
-# create excel file
-wb = xlwt.Workbook()
-# create worksheet
-ws = wb.add_sheet('hongkong')
-raw = 0
-
-while True:
-    line = file.readline()
-    if not line:
-        break
-
-    # 获取股票代码
-    item1 = line.split()[1]
-    price_list = 'test\\' + item1 + '.txt'
-    #price_list = item1 + '.txt'
-    # print("price list file name is: ", price_list)
-
-    # 获取指定股票的价格列表，并将其写入到指定文件中
-    get_stock_price_list(item1, price_list)
-
-    # 同时满足如下的均线
-    ret20 = get_average_result(price_list, 20)
-    ret60 = get_average_result(price_list, 60)
-    ret120 = get_average_result(price_list, 120)
-
-    if ret20 and ret60 and ret120:
-        s_item0 = line.split()[0]
-        s_item1 = line.split()[1]
-        s_item2 = line.split()[2]
-
-        ws.write(raw, 0, s_item0)
-        ws.write(raw, 1, s_item1)
-        ws.write(raw, 2, s_item2)
-        raw += 1
-
-print("write finished")
-wb.save('./stock_20210122.xls')
-'''
-
-'''
-    if ret20 and ret60 and ret120:
-        print(line)
-'''
-
-#get_average_result("09923.txt", 60)
-''' get_average_result test
-ret = get_average_result("09923.txt", 5)
-if ret:
-    print("current price is bigger")
-else:
-    print("current price is lower")
-'''
-
+# not used, get zhonggaigu stock list from futu
+# get_zhonggai_stock_list("zhonggaigu_20210210.txt")
