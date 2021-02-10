@@ -8,7 +8,11 @@ import linecache
 import xlwt
 # read excel
 import xlrd
+# for line number
+import sys
 
+def info(info):
+    print(str(sys._getframe().f_lineno) + info)
 
 # get the line content
 def get_line_context(file_path, line_number):
@@ -117,16 +121,11 @@ def get_stock_price_list(stock, file):
     pd.set_option('display.max_columns',None)
     pd.set_option('display.max_rows',None)
 
-    print(stock)
-    print(file)
-
     # open file and store the stock's price list into the file
     price_obj = open(file, mode = 'w',encoding='utf-8')
     stock_us_daily_hfq_df = ak.stock_us_daily(symbol=stock, adjust="")
     print(stock_us_daily_hfq_df, file=price_obj)
     price_obj.close()
-
-    print("finish")
 
 #
 # 该函数获取中概股的股票列表
@@ -200,7 +199,7 @@ while True:
         ws.write(raw, 2, s_item2)
 
         # 将内容写入 excel 文件中
-        wb.save('./agu_20210210.xls')
+        wb.save('./zg_20210210.xls')
 
         raw += 1
 
