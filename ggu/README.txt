@@ -36,6 +36,14 @@
   A.如果有原始数据，11s 时间就可以扫面完成了，否则需要 30 分钟到 2 小时的时间 。如果没有原始数据就需要将函数“get_stock_price_list”调用的注释打开
   B.在拷贝“ggu_20210211.old.xls”中数据描述的时候，需要在文件 “ggu_20210211.old.xls”的最后一行手动增加 "END" 字符串，用来标记 excel 文件的结尾。
 
+5）执行命令
+  A.当 "test" 目录下包含了输出的股票的价格列表时，执行下面的命令就不用在生成了，时间只需要 11 秒左右。
+  (ak_test) C:\Users\daniel.dong\Documents\GitHub\stock\ggu>python hongkong.py have
+
+  B.如果需要在 test 目录下重新生成股票的价格列表，执行下面的命令，会消耗较多的时间，以小时为单位：
+  (ak_test) C:\Users\daniel.dong\Documents\GitHub\stock\ggu>python hongkong.py no
+
+
 2.更新时间
 1）第 1 次
 C:\Users\daniel.dong>date
