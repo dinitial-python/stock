@@ -1,3 +1,8 @@
+#
+# Python reference:
+# https://www.runoob.com/python/att-string-split.html
+#
+
 # solve the problem with print ...
 import pandas as pd
 # import akshare tools
@@ -8,8 +13,11 @@ import linecache
 import xlwt
 # read excel
 import xlrd
-# for line number
+# get line number
 import sys
+
+# get time
+import time
 
 def info(info):
     print(str(sys._getframe().f_lineno) + info)
@@ -17,6 +25,53 @@ def info(info):
 # get the line content
 def get_line_context(file_path, line_number):
     return linecache.getline(file_path, line_number).strip()
+
+# 
+# 检查字符串（股票代码）是否在 excel 表格中，如果 excel 包含了指定的股票代码，则返回该代码的描述信息
+#
+def get_stock_description(stock, file):
+    # excel读取准备
+    wbook = xlrd.open_workbook(file)
+    sheet1 = wbook.sheets()[0]
+
+    # 从第一行开始
+    nraw = 0
+
+    while True:
+        code = sheet1.cell(nraw, 0).value
+        #print(code)
+
+        if code=="END":
+            break
+
+        if code == stock:
+            #print("code == stock")
+            return sheet1.cell(nraw, 2).value
+
+        nraw += 1
+
+    #print("code != stock")
+    return None
+
+#
+# 返回 bool 变量，表示指定的股票代码是否列入了黑名单
+# True 表示找到了，False 表示没有找到
+#
+def checkBlackList(stock, name):
+    file = open(name,'r', encoding='UTF-8')
+
+    while True:
+        line = file.readline()
+        if not line:
+            break
+
+        code = line.split()[0]
+        if stock==code:
+            #print("Find the stock in the blacklist: " + stock)
+            return True
+
+    #print("Can't find stock in the blacklist")
+    return False
 
 #
 # 该函数返回股票代码的当前价格是否高于均线价格（均线天数使用 days 参数传入函数）
@@ -70,9 +125,9 @@ def get_average_result(str, days):
 # sample:
 #   ret = get_max_result("API.txt", 5)
 #
-def get_max_result(str, days):
+def get_max_result(file, days):
     # get line number
-    cnt = len(open(str, 'r').readlines())
+    cnt = len(open(file, 'r').readlines())
 
     good_lines = cnt - 2    
     if good_lines <= days:
@@ -81,19 +136,20 @@ def get_max_result(str, days):
     index = cnt - days + 1        
 
     # get the last day close price
-    line = get_line_context(str, cnt)
+    line = get_line_context(file, cnt)
     lastVal = line.split()[4]
 
     # 获取成交量，用于计算成交额。对于美股，成交额需要大于 1 亿元 RMB
     lastMount = line.split()[5]
     lastMoney = float(lastVal) * float(lastMount)
+
     if lastMoney < 120000000:
         return 0
 
     total = 0
 
     while index <= cnt:
-        line = get_line_context(str, index)
+        line = get_line_context(file, index)
         item4 = line.split()[4]
 
         if float(item4) < float(lastVal):
@@ -124,7 +180,7 @@ def get_stock_price_list(stock, file):
 
     # open file and store the stock's price list into the file
     price_obj = open(file, mode = 'w',encoding='utf-8')
-    stock_hk_daily_hfq_df = ak.stock_hk_daily(symbol=stock, adjust="hfq")
+    stock_hk_daily_hfq_df = ak.stock_hk_daily(symbol=stock, adjust="qfq")
     print(stock_hk_daily_hfq_df, file=price_obj)
     price_obj.close()
 
@@ -160,43 +216,54 @@ wb = xlwt.Workbook()
 ws = wb.add_sheet('hongkong')
 raw = 0
 
+print('start time: %s'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())) 
+
 while True:
     line = file.readline()
     if not line:
-        break
+        break    
 
     # 获取股票代码
     item1 = line.split()[0]
+
+    # 检查该股票代码是否在黑名单中
+    bBlackList = checkBlackList(item1, "blacklist.txt")
+    if bBlackList==True:
+        continue
 
     # Linux platform
     # price_list = 'test/' + item1 + '.txt'
 
     # Windows platform
     price_list = 'test\\' + item1 + '.txt'       
-    print(price_list)
+    # print(price_list)
 
+    # 
     # 获取指定股票的价格列表，并将其写入到指定文件中
-    get_stock_price_list(item1, price_list)
+    # 如果 test 目录中已经有该文件了，就不用在获取了，节省时间，提高效率
 
-    # 同时满足如下的均线
-    ret20 = get_average_result(price_list, 20)
-    ret60 = get_average_result(price_list, 60)
-    ret120 = get_average_result(price_list, 120)
+    # 如果有原始数据，11s 时间就可以扫面完成了，否则需要 30 分钟到 2 小时的时间
+    #
+    # - daniel.dong hold here
+    # get_stock_price_list(item1, price_list)
 
+    # 同时满足如下的均线条件
     ret30 = get_average_result(price_list, 30)
     max30 = get_max_result(price_list, 30)
 
     if ret30 and max30:
-
-    #if ret20 and ret60 and ret120:
-    #if ret60:
         s_item0 = line.split()[0]
         s_item1 = line.split()[1]
         #s_item2 = line.split()[2]
 
         ws.write(raw, 0, s_item0)
         ws.write(raw, 1, s_item1)
-        #ws.write(raw, 2, s_item2)
+
+        # 返回股票的描述信息
+        des = get_stock_description(s_item0, "ggu_20210211.old.xls")
+        if des!=None:
+            ws.write(raw, 2, des)
+
         wb.save('./ggu_20210211.xls')
 
         raw += 1
@@ -205,4 +272,4 @@ while True:
 
 print("write finished")
 
-
+print('end time: %s'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())) 
