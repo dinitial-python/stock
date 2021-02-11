@@ -204,6 +204,13 @@ def get_hongkong_stock_list(file):
     print(hk_stock_list, file=stock_obj)
     stock_obj.close()
 
+#
+# 当目录 "test" 中如果已经有了价格列表，执行下面的命令可以节省很多时间
+# @ python hongkong.py have
+# 否则就执行下面的命令：
+# @ python hongkong.py no
+#
+param1 = sys.argv[1]
 
 # Step.1 get hongkong.txt from futu gonggu page
 # Step.2 as the follow
@@ -244,8 +251,8 @@ while True:
 
     # 如果有原始数据，11s 时间就可以扫面完成了，否则需要 30 分钟到 2 小时的时间
     #
-    # - daniel.dong hold here
-    # get_stock_price_list(item1, price_list)
+    if param1 != "have":
+        get_stock_price_list(item1, price_list)
 
     # 同时满足如下的均线条件
     ret30 = get_average_result(price_list, 30)
