@@ -1,3 +1,10 @@
+#
+# 1.支持“黑名单”，用来过滤不需要的检查的股票
+# 2.支持命令行输出，命令：python agu.py [testdir] [platform]
+#   - testdir: 表示 test 目录中是否包含了股票的价格列表，其值为 "have" 或 "no"
+#   - platform: 表示该 python 脚本运行的平台，可以是 "winddows" 或 "linux"
+# 
+
 # solve the problem with print ...
 import pandas as pd
 # import akshare tools
@@ -293,7 +300,7 @@ def get_stock_price_list(stock, file):
     price_obj.close()
 
 #
-# 该函数获取所有 A 股的股票列表
+# 该函数获取所有 A 股的股票列表，当前总共 4180 至
 #
 # input parameters:
 #   @file: the file to store the stock list
@@ -346,9 +353,9 @@ def has_turnover_line(str):
 
 #
 # 当目录 "test" 中如果已经有了价格列表，执行下面的命令可以节省很多时间
-# @ python hongkong.py have linux/windows
+# @ python agu.py have linux/windows
 # 否则就执行下面的命令：
-# @ python hongkong.py no linux/windows
+# @ python agu.py no linux/windows
 #
 param1 = sys.argv[1]
 param2 = sys.argv[2]
@@ -373,6 +380,7 @@ print('start time: %s'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
 while True:
     line = file.readline()
 
+    # 如果到文件的末尾则退出
     if not line:
         break
 
@@ -383,9 +391,6 @@ while True:
     bBlackList = checkBlackList(item1, "blacklist.txt")
     if bBlackList==True:
         continue
-
-#if param1 != "have":
-#        get_stock_price_list(item1, price_list)
 
     if param2 != "windows":        
         price_list = 'test/' + item1 + '.txt'
@@ -398,7 +403,7 @@ while True:
     # 
     # 获取指定股票的价格列表，并将其写入到指定文件中
     # 如果 test 目录中已经有该文件了，就不用在获取了，节省时间，提高效率
-
+    #
     # 如果有原始数据，11s 时间就可以扫面完成了，否则需要 58 分钟的时间
     #
     if param1 != "have":
