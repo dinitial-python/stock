@@ -8,12 +8,39 @@ import linecache
 import xlwt
 # read excel
 import xlrd
-# add get time function
+# get line number
+import sys
+
+# get time
 import time
+
+def info(info):
+    print(str(sys._getframe().f_lineno) + info)
 
 # get the line content
 def get_line_context(file_path, line_number):
     return linecache.getline(file_path, int(line_number)).strip()
+
+#
+# 返回 bool 变量，表示指定的股票代码是否列入了黑名单
+# True 表示找到了，False 表示没有找到
+#
+def checkBlackList(stock, name):
+    file = open(name,'r', encoding='UTF-8')
+
+    while True:
+        line = file.readline()
+        if not line:
+            break
+
+        code = line.split()[1]
+        if stock==code:
+            #print("Find the stock in the blacklist: " + stock)
+            return True
+
+    #print("Can't find stock in the blacklist")
+    return False
+
 
 #
 # 该函数返回股票代码的当前价格是否高于均线价格（均线天数使用 days 参数传入函数）
@@ -261,7 +288,7 @@ def get_stock_price_list(stock, file):
 
     # open file and store the stock's price list into the file
     price_obj = open(file, mode = 'w',encoding='utf-8')
-    stock_agu_daily_hfq_df = ak.stock_zh_a_daily(symbol=stock, start_date="20201003", end_date="20210210", adjust="qfq")
+    stock_agu_daily_hfq_df = ak.stock_zh_a_daily(symbol=stock, start_date="20201003", end_date="20210212", adjust="qfq")
     print(stock_agu_daily_hfq_df, file=price_obj)
     price_obj.close()
 
@@ -310,12 +337,21 @@ def has_turnover_line(str):
         ret_index = line.find("turnover")
         if ret_index >= 0:
             # find "turnover" string in the file
-            return 1
+            return True
         else:
             index += 1
 
     # can't find "turnover" string in the file
-    return 0
+    return False
+
+#
+# 当目录 "test" 中如果已经有了价格列表，执行下面的命令可以节省很多时间
+# @ python hongkong.py have linux/windows
+# 否则就执行下面的命令：
+# @ python hongkong.py no linux/windows
+#
+param1 = sys.argv[1]
+param2 = sys.argv[2]
 
 # Step.1 use get_agu_list("agu_20210208.txt") get the stock list and remove the price information
 # Step.2 as the follow
@@ -329,10 +365,10 @@ file = open('agu_20210208.txt','r', encoding='UTF-8')
 # create excel file
 wb = xlwt.Workbook()
 # create worksheet
-ws = wb.add_sheet('zhonggaigu_22')
+ws = wb.add_sheet('agu')
 raw = 0
 
-print('my name:%s'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+print('start time: %s'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())) 
 
 while True:
     line = file.readline()
@@ -343,19 +379,34 @@ while True:
     # 获取股票代码
     item1 = line.split()[1]
 
-    # Linux platform
-    # price_list = 'test/' + item1 + '.txt'
+    # 检查该股票代码是否在黑名单中
+    bBlackList = checkBlackList(item1, "blacklist.txt")
+    if bBlackList==True:
+        continue
 
-    # Windows platform
-    price_list = 'test\\' + item1 + '.txt'       
-    print(price_list)
+#if param1 != "have":
+#        get_stock_price_list(item1, price_list)
 
+    if param2 != "windows":        
+        price_list = 'test/' + item1 + '.txt'
+    else:
+        # Windows platform
+        price_list = 'test\\' + item1 + '.txt'
+
+    # print(price_list)
+
+    # 
     # 获取指定股票的价格列表，并将其写入到指定文件中
-    get_stock_price_list(item1, price_list)
+    # 如果 test 目录中已经有该文件了，就不用在获取了，节省时间，提高效率
+
+    # 如果有原始数据，11s 时间就可以扫面完成了，否则需要 58 分钟的时间
+    #
+    if param1 != "have":
+        get_stock_price_list(item1, price_list)
 
     # 同时满足如下的均线
     ret = has_turnover_line(price_list)
-    if ret == 0:
+    if ret==False:
         #print("daniel - do not have turnover")
         ret30 = get_no_turnover_verage_result(price_list, 30)
         max30 = get_no_turnover_max_result(price_list, 30)
@@ -368,18 +419,20 @@ while True:
         s_item0 = line.split()[0]
         s_item1 = line.split()[1]
         s_item2 = line.split()[2]
+        s_item3 = line.split()[3]
 
         ws.write(raw, 0, s_item0)
         ws.write(raw, 1, s_item1)
         ws.write(raw, 2, s_item2)
+        ws.write(raw, 3, s_item3)
 
         # 将内容写入 excel 文件中
-        wb.save('./agu_20210211.xls')
+        wb.save('./agu_20210212.xls')
 
         raw += 1
 
         print(item1)
-    
 
 print("write finished")
-print('my name:%s'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+
+print('end time: %s'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())) 
