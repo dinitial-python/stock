@@ -211,6 +211,7 @@ def get_hongkong_stock_list(file):
 # @ python hongkong.py no
 #
 param1 = sys.argv[1]
+param2 = sys.argv[2]
 
 # Step.1 get hongkong.txt from futu gonggu page
 # Step.2 as the follow
@@ -238,11 +239,11 @@ while True:
     if bBlackList==True:
         continue
 
-    # Linux platform
-    # price_list = 'test/' + item1 + '.txt'
-
-    # Windows platform
-    price_list = 'test\\' + item1 + '.txt'       
+	if param2 != "windows":
+		price_list = 'test/' + item1 + '.txt'
+	else:
+		# Windows platform
+		price_list = 'test\\' + item1 + '.txt'       
     # print(price_list)
 
     # 
