@@ -62,13 +62,16 @@ def checkBlackList(stock, name):
 # sample:
 #   ret = get_turnover_average_result("09923.txt", 5)
 #
-def get_turnover_average_result(str, days):
-    # get total lines
-    total  = len(open(str, 'r').readlines())
-    # print ("lines numbers: ", total)
+def get_turnover_average_result(str, days, hasturnover):
+    if hasturnover==True:
+        # get total lines
+        total  = len(open(str, 'r').readlines())
 
-    # get line number(get the line which has the data)
-    cnt = (total - 5) / 2 + 2
+        # get line number(get the line which has the data)
+        cnt = (total - 5) / 2 + 2
+    else:
+        # get line number
+        cnt = len(open(str, 'r').readlines())
 
     # get the line from index value
     # print("cnt is: ", cnt)
@@ -101,56 +104,6 @@ def get_turnover_average_result(str, days):
         return 0
 
 #
-# 没有包含 turnover 的字符串
-#
-# 该函数返回股票代码的当前价格是否高于均线价格（均线天数使用 days 参数传入函数）
-#
-# input parameters:
-#   @str : txt filename, include the stock code's price
-#   @days: average days, the value is: 15, 30, 60, etc
-#
-# return value:
-#   if current price bigger than the average, return 1, or will return 0
-#
-# sample:
-#   ret = get_no_turnover_verage_result("09923.txt", 5)
-#
-def get_no_turnover_verage_result(str, days):
-    # get line number
-    cnt = len(open(str, 'r').readlines())
-    #print ("lines numbers: ", cnt)
-
-    # get the line from index value
-    # print("cnt is: ", cnt)
-    # print("days is: ", days)
-    good_lines = cnt - 2    
-    if good_lines <= days:
-        return 0    
-
-    index = cnt - days + 1
-    #print("from index: ", index)
-
-    total = 0.0
-
-    while index <= cnt:
-        line = get_line_context(str, index)
-        #print(line)
-        item4 = line.split()[4]
-        #print(item4)
-        total += float(item4)        
-        index += 1
-
-    average = total / days
-
-    #print(average)
-    #print(item4)
-
-    if float(item4) >= average:
-        return 1
-    else:
-        return 0
-
-#
 # 该函数返回股票代码的当前价格是否为均线的最次 2 价格（均线天数使用 days 参数传入函数）
 # 并且交易额要大于 2 亿人民币
 #
@@ -164,77 +117,16 @@ def get_no_turnover_verage_result(str, days):
 # sample:
 #   ret = get_turnover_max_result("09923.txt", 5)
 #
-def get_turnover_max_result(str, days):
-    # get total lines
-    total  = len(open(str, 'r').readlines())
-    #print ("lines numbers: ", total)
+def get_turnover_max_result(str, days, hasturnover):
+    if hasturnover==True:
+        # get total lines
+        total  = len(open(str, 'r').readlines())
 
-    # get line number(get the line which has the data)
-    cnt = (total - 5) / 2 + 2
-
-    # get the line from index value
-    #print("cnt is: ", cnt)
-    #print("days is: ", days)
-    good_lines = cnt - 2    
-    if good_lines <= days:
-        return 0        
-
-    index = cnt - days + 1
-
-    # get the last day data
-    line = get_line_context(str, cnt)
-    lastVal = line.split()[4]
-
-    #print(line)
-    #print(lastVal)
-
-    lastMount = line.split()[5]
-    lastMoney = float(lastVal) * float(lastMount)
-
-    #print(lastVal)
-    #print(lastMount)
-    #print(lastMoney)
-
-    if lastMoney < 200000000:
-        return 0
-
-    total = 0
-
-    while index <= cnt:
-        line = get_line_context(str, index)
-        item4 = line.split()[4]
-        #print(item4)
-        if float(item4) < float(lastVal):
-            total += 1
-
-        index += 1
-
-    if total >= (days - 2):
-        return 1
+        # get line number(get the line which has the data)
+        cnt = (total - 5) / 2 + 2
     else:
-        return 0
-
-
-#
-# 没有包含 “turnover” 字符串的行
-#
-# 该函数返回股票代码的当前价格是否为均线的最次 2 价格（均线天数使用 days 参数传入函数）
-# 并且交易额要大于 1 亿美元
-#
-# input parameters:
-#   @str : txt filename, include the stock code's price
-#   @days: average days, the value is: 15, 30, 60, etc
-#
-# return value:
-#   if current price biggest, return 1, or will return 0
-#
-# sample:
-#   ret = get_no_turnover_max_result("09923.txt", 5)
-#
-def get_no_turnover_max_result(str, days):
-    # get line number
-    cnt = len(open(str, 'r').readlines())
-    #print ("lines numbers: ", cnt)
+        # get line number
+        cnt = len(open(str, 'r').readlines())
 
     # get the line from index value
     #print("cnt is: ", cnt)
@@ -410,15 +302,9 @@ while True:
         get_stock_price_list(item1, price_list)
 
     # 同时满足如下的均线
-    ret = has_turnover_line(price_list)
-    if ret==False:
-        #print("daniel - do not have turnover")
-        ret30 = get_no_turnover_verage_result(price_list, 30)
-        max30 = get_no_turnover_max_result(price_list, 30)
-    else:
-        #print("daniel - have turnover")
-        ret30 = get_turnover_average_result(price_list, 30)
-        max30 = get_turnover_max_result(price_list, 30) 
+    bRet = has_turnover_line(price_list)
+    ret30 = get_turnover_average_result(price_list, 30, bRet)
+    max30 = get_turnover_max_result(price_list, 30, bRet) 
 
     if ret30 and max30:
         s_item0 = line.split()[0]
