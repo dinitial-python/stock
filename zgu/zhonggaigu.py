@@ -87,7 +87,8 @@ def get_max_result(str, days):
     # 获取成交量，用于计算成交额。对于美股，成交额需要大于 1 亿元美金
     lastMount = line.split()[5]
     lastMoney = float(lastVal) * float(lastMount)
-    if lastMoney < 100000000:
+    #if lastMoney < 100000000:
+    if lastMoney < 50000000:
         return 0
 
     total = 0
@@ -123,8 +124,8 @@ def get_stock_price_list(stock, file):
 
     # open file and store the stock's price list into the file
     price_obj = open(file, mode = 'w',encoding='utf-8')
-    stock_us_daily_hfq_df = ak.stock_us_daily(symbol=stock, adjust="")
-    print(stock_us_daily_hfq_df, file=price_obj)
+    stock_us_daily_qfq_df = ak.stock_us_daily(symbol=stock, adjust="qfq")
+    print(stock_us_daily_qfq_df, file=price_obj)
     price_obj.close()
 
 #
@@ -179,17 +180,10 @@ while True:
     get_stock_price_list(item1, price_list)   
 
     # 同时满足如下的均线
-    ret20 = get_average_result(price_list, 20)
-    ret60 = get_average_result(price_list, 60)
-    ret120 = get_average_result(price_list, 120)
-
     ret30 = get_average_result(price_list, 30)
     max30 = get_max_result(price_list, 30)
 
     if ret30 and max30:
-
-    #if ret20 and ret60 and ret120:
-    #if ret60:
         s_item0 = line.split()[0]
         s_item1 = line.split()[1]
         s_item2 = line.split()[2]
@@ -206,7 +200,6 @@ while True:
         print(item1)
 
 print("write finished")
-#wb.save('./stock_20210122.xls')
 
 # not used, get zhonggaigu stock list from futu
 # get_zhonggai_stock_list("zhonggaigu_20210210.txt")
