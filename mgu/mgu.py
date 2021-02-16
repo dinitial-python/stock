@@ -21,7 +21,7 @@ def info(info):
 #
 # get content of a line
 #
-def get_line_context(file_path, line_number):
+def get_line_content(file_path, line_number):
     return linecache.getline(file_path, int(line_number)).strip()
 
 #
@@ -60,7 +60,7 @@ def bigger_than_average(pricelist, days):
     total = 0.0
 
     while index <= cnt:
-        line = get_line_context(pricelist, index)
+        line = get_line_content(pricelist, index)
         item4 = line.split()[4]        
         total += float(item4)
         index += 1
@@ -87,7 +87,7 @@ def bigger_than_total(pricelist, days):
     index = cnt - days + 1
 
     # get the last day close price
-    lastLine = get_line_context(pricelist, cnt)
+    lastLine = get_line_content(pricelist, cnt)
     lastPrice = lastLine.split()[4]
 
     # the last sell money must bigger than 50000000 dollar
@@ -99,7 +99,7 @@ def bigger_than_total(pricelist, days):
     totalDay = 0
 
     while index <= cnt:
-        line = get_line_context(pricelist, index)
+        line = get_line_content(pricelist, index)
         item4 = line.split()[4]
 
         if float(item4) < float(lastPrice):
