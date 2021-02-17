@@ -44,6 +44,19 @@ def checkBlackList(stock, filename):
     return False
 
 #
+# Get last price of the stock
+#
+def get_last_price(pricelist):
+    # get line number
+    cnt = len(open(pricelist, 'r').readlines())
+
+    # get the last day close price
+    lastLine = get_line_content(pricelist, cnt)
+    lastPrice = lastLine.split()[4]
+
+    return lastPrice
+
+#
 # check wether current stock price is bigger than the average of the days
 #
 def bigger_than_average(pricelist, days):
@@ -68,6 +81,35 @@ def bigger_than_average(pricelist, days):
     average = total / days
 
     if float(item4) >= average:
+        return True
+    else:
+        return False
+
+#
+# check wether current stock price is lower than the average of the days
+#
+def lower_than_average(pricelist, days):
+    # get line number
+    cnt = len(open(pricelist, 'r').readlines())
+    
+    good_lines = cnt - 2
+    if good_lines <= days:
+        return False
+
+    # from the index
+    index = cnt - days + 1
+
+    total = 0.0
+
+    while index <= cnt:
+        line = get_line_content(pricelist, index)
+        item4 = line.split()[4]        
+        total += float(item4)
+        index += 1
+
+    average = total / days
+
+    if float(item4) < average:
         return True
     else:
         return False
@@ -113,6 +155,46 @@ def bigger_than_total(pricelist, days):
         return False
 
 #
+# check wether current stock price is lower than the specific number of days
+# Current the day is total days - 2
+#
+def lower_than_total(pricelist, days):
+    # get line number
+    cnt = len(open(pricelist, 'r').readlines())
+
+    good_lines = cnt - 2    
+    if good_lines <= days:
+        return 0
+
+    index = cnt - days + 1
+
+    # get the last day close price
+    lastLine = get_line_content(pricelist, cnt)
+    lastPrice = lastLine.split()[4]
+
+    # the last sell money must bigger than 50000000 dollar
+    lastMount = lastLine.split()[5]
+    lastMoney = float(lastPrice) * float(lastMount)    
+    if lastMoney < 50000000:
+        return False
+
+    totalDay = 0
+
+    while index <= cnt:
+        line = get_line_content(pricelist, index)
+        item4 = line.split()[4]
+
+        if float(lastPrice) < float(item4):
+            totalDay += 1
+
+        index += 1
+
+    if totalDay >= (days - 2):
+        return True
+    else:
+        return False
+
+#
 # store the stock's price list in the file
 #
 def get_stock_price_list(stock, filename):    
@@ -126,16 +208,45 @@ def get_stock_price_list(stock, filename):
     print(daily_us_qfq, file=price_obj)
     price_obj.close()
 
-# help information
-print("python  mgu.py  window|linux  have|no")
+#
+# Up trend following
+#
+def up_trend_following(listPrice, days):
+    # get the result
+    avg30 = bigger_than_average(listPrice, days)
+    tot30 = bigger_than_total(listPrice, days)
+
+    if avg30 and tot30:
+        return True
+    else:
+        return False
 
 #
-# python mgu.py [platform] [test]
+# Down trend following
+#
+def down_trend_following(listPrice, days):
+    # get the result
+    avg30 = lower_than_average(listPrice, days)
+    tot30 = lower_than_total(listPrice, days)
+
+    if avg30 and tot30:
+        return True
+    else:
+        return False
+
+
+# help information
+print("python  mgu.py  [windows|linux]  [up|down]  [have|no]")
+
+#
+# python mgu.py [platform] [trend] [test] 
 # @platform: windows | linux
+# @trend: up | down
 # @test: have | no
 #
 param1 = sys.argv[1]
 param2 = sys.argv[2]
+param3 = sys.argv[3]
 
 # open excel file and create the sheet
 wBook = xlwt.Workbook()
@@ -150,6 +261,9 @@ global_index = 0
 # open stock list file
 stockList = open('20210212_mgu.txt','r', encoding='UTF-8')
 
+# star to count time
+print('start time: %s'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+
 while True:
     line = stockList.readline()
     if not line:
@@ -163,7 +277,7 @@ while True:
     if bBlackList==True:
         continue
 
-    if param1 != "windows":        
+    if param1 != "windows":
         price_list = 'test/' + item1 + '.txt'
     else:
         # Windows platform
@@ -172,15 +286,17 @@ while True:
     print("number: " + str(global_index) + " : " + price_list)
     global_index += 1
 
-    if param2 != "have":        
-        bExist = os.path.exists(price_list)
-        if bExist==False:
-            get_stock_price_list(item1, price_list)
+    if param3 != "have":        
+        #bExist = os.path.exists(price_list)
+        #if bExist==False:
+        get_stock_price_list(item1, price_list)
+    
+    if param2 == "down":
+        trend = down_trend_following(price_list, 7)
+    else:
+        trend = up_trend_following(price_list, 30)
 
-    # get the result
-    avg30 = bigger_than_average(price_list, 30)
-    tot30 = bigger_than_total(price_list, 30)
-    if avg30 and tot30:
+    if trend==True:
         s_item0 = line.split()[0]
         s_item1 = line.split()[1]
         s_item2 = line.split()[2]
@@ -189,11 +305,21 @@ while True:
         wSheet.write(raw, 1, s_item1)
         wSheet.write(raw, 2, s_item2)
 
+        # append last price of the stock
+        price = get_last_price(price_list)
+        wSheet.write(raw, 3, price)
+
         # write the result to excel file
-        wBook.save('./mgu_20210212.xls')
+        if param2 == "down":
+            wBook.save('./mgu_20210217_down.xls')
+        else:
+            wBook.save('./mgu_20210217_up.xls')
 
         raw += 1
 
-        print(item1)
+        print(item1)    
 
 print("write finished")
+
+# end to count time
+print('end time: %s'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())) 
