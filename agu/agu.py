@@ -15,6 +15,8 @@ import linecache
 import xlwt
 # read excel
 import xlrd
+
+from xlutils.copy import copy
 # get line number
 import sys
 
@@ -25,7 +27,7 @@ def info(info):
     print(str(sys._getframe().f_lineno) + info)
 
 # get the line content
-def get_line_context(file_path, line_number):
+def get_line_content(file_path, line_number):
     return linecache.getline(file_path, int(line_number)).strip()
 
 #
@@ -86,7 +88,7 @@ def get_turnover_average_result(str, days, hasturnover):
     total = 0.0
 
     while index <= cnt:
-        line = get_line_context(str, index)
+        line = get_line_content(str, index)
         #print(line)
         item4 = line.split()[4]
         #print(item4)
@@ -138,7 +140,7 @@ def get_turnover_max_result(str, days, hasturnover):
     index = cnt - days + 1
 
     # get the last day data
-    line = get_line_context(str, cnt)
+    line = get_line_content(str, cnt)
     lastVal = line.split()[4]
 
     #print(line)
@@ -157,7 +159,7 @@ def get_turnover_max_result(str, days, hasturnover):
     total = 0
 
     while index <= cnt:
-        line = get_line_context(str, index)
+        line = get_line_content(str, index)
         item4 = line.split()[4]
         #print(item4)
         if float(item4) < float(lastVal):
@@ -169,6 +171,35 @@ def get_turnover_max_result(str, days, hasturnover):
         return 1
     else:
         return 0
+
+#
+# 该函数返回股票代码的最新价格
+#
+# input parameters:
+#   @str : txt filename, include the stock code's price
+#
+# return value:
+#   return the last price of the stock
+#
+# sample:
+#   ret = get_max_result("API.txt", 5)
+#
+def get_last_price(str, hasturnover):
+    if hasturnover==True:
+        # get total lines
+        total  = len(open(str, 'r').readlines())
+
+        # get line number(get the line which has the data)
+        cnt = (total - 5) / 2 + 2
+    else:
+        # get line number
+        cnt = len(open(str, 'r').readlines())
+
+    # get the last day close price
+    line = get_line_content(str, cnt)
+    lastVal = line.split()[4]
+
+    return lastVal
 
 #
 # 该函数基于输入的股票代码stock将历史价格列表返回到参数file指定的文件中
@@ -231,7 +262,7 @@ def has_turnover_line(str):
     index = 2
 
     while index <= total:
-        line = get_line_context(str, index)        
+        line = get_line_content(str, index)        
 
         ret_index = line.find("turnover")
         if ret_index >= 0:
@@ -243,6 +274,57 @@ def has_turnover_line(str):
     # can't find "turnover" string in the file
     return False
 
+# 
+# return description of the stock
+#
+def get_stock_description(stock, file):
+    wBook = xlrd.open_workbook(file)
+    wSheet = wBook.sheets()[0]
+    
+    # total line of the excel
+    totalRow = wSheet.nrows    
+
+    # index from first row
+    nRow = 0
+
+    while True:
+        if nRow >= totalRow:
+            break
+
+        code = wSheet.cell(nRow, 1).value
+        if code == stock:        
+            return wSheet.cell(nRow, 5).value
+
+        nRow += 1
+
+    return None
+
+# 
+# add new stock to the reference description file
+#
+def add_stock_to_description(line, file):
+    wBook = xlrd.open_workbook(file)
+    totalRow = wBook.sheets()[0].nrows
+    
+    writeBook = copy(wBook)
+    wooksheet = writeBook.get_sheet(0)
+    
+    s_item0 = line.split()[0]
+    s_item1 = line.split()[1]
+    s_item2 = line.split()[2]
+    s_item3 = line.split()[3]
+
+    # index to the next line, excel index from zero
+    wooksheet.write(totalRow, 0, s_item0)
+    wooksheet.write(totalRow, 1, s_item1)
+    wooksheet.write(totalRow, 2, s_item2)
+    wooksheet.write(totalRow, 3, s_item3)
+
+    writeBook.save(file)    
+
+# help information
+print("python  agu.py  [have|no]  [windows|linux]")
+
 #
 # 当目录 "test" 中如果已经有了价格列表，执行下面的命令可以节省很多时间
 # @ python agu.py have linux/windows
@@ -251,6 +333,10 @@ def has_turnover_line(str):
 #
 param1 = sys.argv[1]
 param2 = sys.argv[2]
+
+
+# used to count the output
+global_index = 0
 
 # Step.1 use get_agu_list("agu_20210208.txt") get the stock list and remove the price information
 # Step.2 as the follow
@@ -290,6 +376,9 @@ while True:
         # Windows platform
         price_list = 'test\\' + item1 + '.txt'
 
+    print("number: " + str(global_index) + " : " + price_list)
+    global_index += 1
+
     # print(price_list)
 
     # 
@@ -317,8 +406,18 @@ while True:
         ws.write(raw, 2, s_item2)
         ws.write(raw, 3, s_item3)
 
-        # 将内容写入 excel 文件中
-        wb.save('./agu_20210212.xls')
+        price = get_last_price(price_list, bRet)    
+        ws.write(raw, 4, price)
+
+        # check wether this stock has description
+        des = get_stock_description(s_item1, "agu_ref.xls")        
+        if des!=None:            
+            ws.write(raw, 5, des)
+            # 将内容写入 excel 文件中
+            wb.save('./agu_20210217.xls')
+
+        else: # add the stock in the orig file
+            add_stock_to_description(line, "agu_ref.xls")        
 
         raw += 1
 

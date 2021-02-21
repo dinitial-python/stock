@@ -108,6 +108,28 @@ def get_max_result(str, days):
         return 0
 
 #
+# 该函数返回股票代码的最新价格
+#
+# input parameters:
+#   @str : txt filename, include the stock code's price
+#
+# return value:
+#   return the last price of the stock
+#
+# sample:
+#   ret = get_max_result("API.txt", 5)
+#
+def get_last_price(str):
+    # get line number
+    cnt = len(open(str, 'r').readlines())
+
+    # get the last day close price
+    line = get_line_context(str, cnt)
+    lastVal = line.split()[4]
+
+    return lastVal
+
+#
 # 该函数基于输入的股票代码stock将历史价格列表返回到参数file指定的文件中
 #
 # input parameters:
@@ -181,16 +203,17 @@ while True:
 
     # 同时满足如下的均线
     ret30 = get_average_result(price_list, 30)
-    max30 = get_max_result(price_list, 30)
+    max30 = get_max_result(price_list, 30)    
 
     if ret30 and max30:
         s_item0 = line.split()[0]
         s_item1 = line.split()[1]
-        s_item2 = line.split()[2]
 
         ws.write(raw, 0, s_item0)
         ws.write(raw, 1, s_item1)
-        ws.write(raw, 2, s_item2)
+
+        price = get_last_price(price_list)    
+        ws.write(raw, 2, price)
 
         # 将内容写入 excel 文件中
         wb.save('./zg_20210210.xls')

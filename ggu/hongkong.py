@@ -224,7 +224,7 @@ wb = xlwt.Workbook()
 ws = wb.add_sheet('hongkong')
 raw = 0
 
-print('start time: %s'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())) 
+print('start time: %s'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
 
 while True:
     line = file.readline()
