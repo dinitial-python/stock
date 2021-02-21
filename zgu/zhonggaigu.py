@@ -88,7 +88,8 @@ def get_max_result(str, days):
     lastMount = line.split()[5]
     lastMoney = float(lastVal) * float(lastMount)
     #if lastMoney < 100000000:
-    if lastMoney < 50000000:
+    #if lastMoney < 20000000:
+    if lastMoney < 10000000:
         return 0
 
     total = 0
