@@ -204,6 +204,9 @@ def get_hongkong_stock_list(file):
     print(hk_stock_list, file=stock_obj)
     stock_obj.close()
 
+# help information
+print("python  hongkong.py  [have|no]  [windows|linux]")
+
 #
 # 当目录 "test" 中如果已经有了价格列表，执行下面的命令可以节省很多时间
 # @ python hongkong.py have
@@ -239,11 +242,11 @@ while True:
     if bBlackList==True:
         continue
 
-	if param2 != "windows":
-		price_list = 'test/' + item1 + '.txt'
-	else:
+    if param2 != "windows":
+        price_list = 'test/' + item1 + '.txt'
+    else:
 		# Windows platform
-		price_list = 'test\\' + item1 + '.txt'       
+        price_list = 'test\\' + item1 + '.txt'       
     # print(price_list)
 
     # 
