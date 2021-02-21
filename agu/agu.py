@@ -23,6 +23,8 @@ import sys
 # get time
 import time
 
+import os
+
 def info(info):
     print(str(sys._getframe().f_lineno) + info)
 
@@ -302,7 +304,7 @@ def get_stock_description(stock, file):
 # 
 # add new stock to the reference description file
 #
-def add_stock_to_description(line, file):
+def add_stock_to_description(line, lastPrice, file):
     wBook = xlrd.open_workbook(file)
     totalRow = wBook.sheets()[0].nrows
     
@@ -319,6 +321,7 @@ def add_stock_to_description(line, file):
     wooksheet.write(totalRow, 1, s_item1)
     wooksheet.write(totalRow, 2, s_item2)
     wooksheet.write(totalRow, 3, s_item3)
+    wooksheet.write(totalRow, 4, lastPrice)
 
     writeBook.save(file)    
 
@@ -388,7 +391,9 @@ while True:
     # 如果有原始数据，11s 时间就可以扫面完成了，否则需要 58 分钟的时间
     #
     if param1 != "have":
-        get_stock_price_list(item1, price_list)
+        bExist = os.path.exists(price_list)
+        if bExist==False:
+            get_stock_price_list(item1, price_list)
 
     # 同时满足如下的均线
     bRet = has_turnover_line(price_list)
@@ -417,7 +422,7 @@ while True:
             wb.save('./agu_20210221.xls')
 
         else: # add the stock in the orig file
-            add_stock_to_description(line, "agu_ref.xls")        
+            add_stock_to_description(line, price, "agu_ref.xls")        
 
         raw += 1
 
