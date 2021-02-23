@@ -220,7 +220,7 @@ def get_stock_price_list(stock, file):
 
     # open file and store the stock's price list into the file
     price_obj = open(file, mode = 'w',encoding='utf-8')
-    stock_agu_daily_hfq_df = ak.stock_zh_a_daily(symbol=stock, start_date="20201003", end_date="20210221", adjust="qfq")
+    stock_agu_daily_hfq_df = ak.stock_zh_a_daily(symbol=stock, start_date="20201003", end_date="20210223", adjust="qfq")
     print(stock_agu_daily_hfq_df, file=price_obj)
     price_obj.close()
 
@@ -419,7 +419,7 @@ while True:
         if des!=None:            
             ws.write(raw, 5, des)
             # 将内容写入 excel 文件中
-            wb.save('./agu_20210221.xls')
+            wb.save('./agu_20210223.xls')
 
         else: # add the stock in the orig file
             add_stock_to_description(line, price, "agu_ref.xls")        
