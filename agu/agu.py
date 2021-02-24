@@ -121,16 +121,16 @@ def get_turnover_average_result(str, days, hasturnover):
 # sample:
 #   ret = get_turnover_max_result("09923.txt", 5)
 #
-def get_turnover_max_result(str, days, hasturnover):
+def get_turnover_max_result(filename, days, hasturnover):
     if hasturnover==True:
         # get total lines
-        total  = len(open(str, 'r').readlines())
+        total  = len(open(filename, 'r').readlines())
 
         # get line number(get the line which has the data)
         cnt = (total - 5) / 2 + 2
     else:
         # get line number
-        cnt = len(open(str, 'r').readlines())
+        cnt = len(open(filename, 'r').readlines())
 
     # get the line from index value
     #print("cnt is: ", cnt)
@@ -142,7 +142,7 @@ def get_turnover_max_result(str, days, hasturnover):
     index = cnt - days + 1
 
     # get the last day data
-    line = get_line_content(str, cnt)
+    line = get_line_content(filename, cnt)
     lastVal = line.split()[4]
 
     #print(line)
@@ -155,13 +155,18 @@ def get_turnover_max_result(str, days, hasturnover):
     #print(lastMount)
     #print(lastMoney)
 
-    if lastMoney < 200000000:
+    if lastMoney < 100000000:
+        return 0
+
+    totalStock = line.split()[6]
+    totalMarketPrice = float(lastVal) * float(totalStock)
+    if totalMarketPrice < 4500000000:
         return 0
 
     total = 0
 
     while index <= cnt:
-        line = get_line_content(str, index)
+        line = get_line_content(filename, index)
         item4 = line.split()[4]
         #print(item4)
         if float(item4) < float(lastVal):
@@ -220,7 +225,7 @@ def get_stock_price_list(stock, file):
 
     # open file and store the stock's price list into the file
     price_obj = open(file, mode = 'w',encoding='utf-8')
-    stock_agu_daily_hfq_df = ak.stock_zh_a_daily(symbol=stock, start_date="20201003", end_date="20210223", adjust="qfq")
+    stock_agu_daily_hfq_df = ak.stock_zh_a_daily(symbol=stock, start_date="20201003", end_date="20210224", adjust="qfq")
     print(stock_agu_daily_hfq_df, file=price_obj)
     price_obj.close()
 
@@ -419,7 +424,7 @@ while True:
         if des!=None:            
             ws.write(raw, 5, des)
             # 将内容写入 excel 文件中
-            wb.save('./agu_20210223.xls')
+            wb.save('./agu_20210224.xls')
 
         else: # add the stock in the orig file
             add_stock_to_description(line, price, "agu_ref.xls")        
