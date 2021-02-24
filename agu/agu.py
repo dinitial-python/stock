@@ -155,12 +155,12 @@ def get_turnover_max_result(filename, days, hasturnover):
     #print(lastMount)
     #print(lastMoney)
 
-    if lastMoney < 100000000:
+    if lastMoney < 150000000:
         return 0
 
     totalStock = line.split()[6]
     totalMarketPrice = float(lastVal) * float(totalStock)
-    if totalMarketPrice < 4500000000:
+    if totalMarketPrice < 5000000000:
         return 0
 
     total = 0
