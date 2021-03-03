@@ -52,6 +52,61 @@ def checkBlackList(stock, name):
     #print("Can't find stock in the blacklist")
     return False
 
+#
+# 该函数返回股票代码的当天成交量是否高于均线成交量的 3 倍（均线天数使用 days 参数传入函数）
+#
+# input parameters:
+#   @str : txt filename, include the stock code's price
+#   @days: average days, the value is: 15, 30, 60, etc
+#
+# return value:
+#   if current price bigger than the average, return 1, or will return 0
+#
+# sample:
+#   ret = get_turnover_average_result("09923.txt", 5)
+#
+def get_turnover_average_mount_three(filename, days, hasturnover):
+    if hasturnover==True:
+        # get total lines
+        total  = len(open(filename, 'r').readlines())
+
+        # get line number(get the line which has the data)
+        cnt = (total - 5) / 2 + 2
+    else:
+        # get line number
+        cnt = len(open(filename, 'r').readlines())
+
+    # get the line from index value
+    # print("cnt is: ", cnt)
+    # print("days is: ", days)
+    good_lines = cnt - 2    
+    if good_lines <= days:
+        return 0    
+
+    index = cnt - days + 1
+    # print("from index: ", index)
+
+    total = 0.0
+
+    while index <= cnt:
+        line = get_line_content(filename, index)
+        #print(line)
+        item5 = line.split()[5]
+        #print(item5)
+        total += float(item5)        
+        index += 1
+
+    average = total / days    
+    times_average = average * 3.0
+
+    #print("times_average:" + str(times_average))
+    #print("last volume" + item5)
+
+    if float(item5) >= times_average:
+        # return 1
+        return float(item5)/average
+    else:
+        return 0
 
 #
 # 该函数返回股票代码的当前价格是否高于均线价格（均线天数使用 days 参数传入函数）
@@ -225,7 +280,7 @@ def get_stock_price_list(stock, file):
 
     # open file and store the stock's price list into the file
     price_obj = open(file, mode = 'w',encoding='utf-8')
-    stock_agu_daily_hfq_df = ak.stock_zh_a_daily(symbol=stock, start_date="20201003", end_date="20210225", adjust="qfq")
+    stock_agu_daily_hfq_df = ak.stock_zh_a_daily(symbol=stock, start_date="20201003", end_date="20210303", adjust="qfq")
     print(stock_agu_daily_hfq_df, file=price_obj)
     price_obj.close()
 
@@ -331,7 +386,7 @@ def add_stock_to_description(line, lastPrice, file):
     writeBook.save(file)    
 
 # help information
-print("python  agu.py  [have|no]  [windows|linux]")
+print("python  agu.py  [have|no]  [windows|linux]  [volume|price]")
 
 #
 # 当目录 "test" 中如果已经有了价格列表，执行下面的命令可以节省很多时间
@@ -341,7 +396,15 @@ print("python  agu.py  [have|no]  [windows|linux]")
 #
 param1 = sys.argv[1]
 param2 = sys.argv[2]
+param3 = sys.argv[3]
 
+# reference file
+agu_price_ref = "agu_price_ref.xls"
+agu_volume_ref = "agu_volume_ref.xls"
+
+# data file, need to change every run
+agu_price_new = './agu_price_20210303.xls'
+agu_volume_new = './agu_volume_20210303.xls'
 
 # used to count the output
 global_index = 0
@@ -361,7 +424,10 @@ wb = xlwt.Workbook()
 ws = wb.add_sheet('agu')
 raw = 0
 
-print('start time: %s'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())) 
+if param3 != "volume":
+    print('price start time: %s'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())) 
+else:
+    print('volume start time: %s'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())) 
 
 while True:
     line = file.readline()
@@ -378,7 +444,7 @@ while True:
     if bBlackList==True:
         continue
 
-    if param2 != "windows":        
+    if param2 != "windows":
         price_list = 'test/' + item1 + '.txt'
     else:
         # Windows platform
@@ -401,11 +467,16 @@ while True:
             get_stock_price_list(item1, price_list)
 
     # 同时满足如下的均线
-    bRet = has_turnover_line(price_list)
-    ret30 = get_turnover_average_result(price_list, 30, bRet)
-    max30 = get_turnover_max_result(price_list, 30, bRet) 
+    bRet = has_turnover_line(price_list)    
 
-    if ret30 and max30:
+    if param3 != "volume":
+        ret30 = get_turnover_average_result(price_list, 30, bRet)
+        max30 = get_turnover_max_result(price_list, 30, bRet)
+        agu_result = ret30 and max30        
+    else:
+        agu_result = get_turnover_average_mount_three(price_list, 30, bRet)        
+
+    if agu_result:
         s_item0 = line.split()[0]
         s_item1 = line.split()[1]
         s_item2 = line.split()[2]
@@ -420,14 +491,25 @@ while True:
         ws.write(raw, 4, price)
 
         # check wether this stock has description
-        des = get_stock_description(s_item1, "agu_ref.xls")        
+        if param3 != "volume":            
+            des = get_stock_description(s_item1, agu_price_ref)
+        else:
+            des = get_stock_description(s_item1, agu_volume_ref)
+
         if des!=None:            
             ws.write(raw, 5, des)
             # 将内容写入 excel 文件中
-            wb.save('./agu_20210225.xls')
+            if param3 != "volume":
+                wb.save(agu_price_new)
+            else:
+                ws.write(raw, 6, agu_result)
+                wb.save(agu_volume_new)
 
         else: # add the stock in the orig file
-            add_stock_to_description(line, price, "agu_ref.xls")        
+            if param3 != "volume":
+                add_stock_to_description(line, price, agu_price_ref)
+            else:
+                add_stock_to_description(line, price, agu_volume_ref)
 
         raw += 1
 
