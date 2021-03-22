@@ -280,7 +280,7 @@ def get_stock_price_list(stock, file):
 
     # open file and store the stock's price list into the file
     price_obj = open(file, mode = 'w',encoding='utf-8')
-    stock_agu_daily_hfq_df = ak.stock_zh_a_daily(symbol=stock, start_date="20201003", end_date="20210303", adjust="qfq")
+    stock_agu_daily_hfq_df = ak.stock_zh_a_daily(symbol=stock, start_date="20201003", end_date="20210320", adjust="qfq")
     print(stock_agu_daily_hfq_df, file=price_obj)
     price_obj.close()
 
@@ -403,11 +403,14 @@ agu_price_ref = "agu_price_ref.xls"
 agu_volume_ref = "agu_volume_ref.xls"
 
 # data file, need to change every run
-agu_price_new = './agu_price_20210303.xls'
-agu_volume_new = './agu_volume_20210303.xls'
+agu_price_new = './agu_price_20210320.xls'
+agu_volume_new = './agu_volume_20210320.xls'
 
 # used to count the output
 global_index = 0
+
+# global_reset_index
+global_reset_index = 0
 
 # Step.1 use get_agu_list("agu_20210208.txt") get the stock list and remove the price information
 # Step.2 as the follow
@@ -430,6 +433,14 @@ else:
     print('volume start time: %s'%time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())) 
 
 while True:
+    if global_reset_index == 10:
+        global_reset_index = 0
+        time.sleep(2)
+        print('sleep 2 seconds')
+    else:
+        global_reset_index += 1        
+
+
     line = file.readline()
 
     # 如果到文件的末尾则退出
