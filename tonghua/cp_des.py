@@ -49,6 +49,24 @@ def get_stock_description(stock, file):
 
     return None
 
+# 
+# add new stock to the reference description file
+#
+def add_stock_to_description(val00, val01, val02, val03, file):
+    wBook = xlrd.open_workbook(file)
+    totalRow = wBook.sheets()[0].nrows
+    
+    writeBook = copy(wBook)
+    wooksheet = writeBook.get_sheet(0)
+
+    # index to the next line, excel index from zero
+    wooksheet.write(totalRow, 0, val00)
+    wooksheet.write(totalRow, 1, val01)
+    wooksheet.write(totalRow, 2, val02)
+    wooksheet.write(totalRow, 3, val03)
+
+    writeBook.save(file)
+
 #
 # 功能：为文件 file1 中的股票添加描述符。描述符的参考文件为 file2，写入到新创建的 file3 中
 #
@@ -88,23 +106,27 @@ while True:
     if nRow >= totalRow:
         break
 
-    val = wSheet.cell(nRow, 0).value
-    ws.write(nRow, 0, val)
+    val0 = wSheet.cell(nRow, 0).value
+    ws.write(nRow, 0, val0)
 
-    val = wSheet.cell(nRow, 1).value
-    ws.write(nRow, 1, val)
+    val1 = wSheet.cell(nRow, 1).value
+    ws.write(nRow, 1, val1)
 
-    val = wSheet.cell(nRow, 2).value
-    ws.write(nRow, 2, val)
+    val2 = wSheet.cell(nRow, 2).value
+    ws.write(nRow, 2, val2)
 
-    val = wSheet.cell(nRow, 3).value
-    ws.write(nRow, 3, val)
+    val3 = wSheet.cell(nRow, 3).value
+    ws.write(nRow, 3, val3)
 
     code = wSheet.cell(nRow, 0).value
-    des = get_stock_description(code, param2)
+    des = get_stock_description(code, param2)    
     if des!=None:        
-        ws.write(nRow, 4, des) 
+        ws.write(nRow, 4, des)
+    else:
+        add_stock_to_description(val0, val1, val2, val3, param2)
 
     nRow += 1
+
+    print("nRow val is:" + str(nRow))
 
 wb.save(param3)
